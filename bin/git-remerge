@@ -42,7 +42,8 @@ main()
   local -r ref="$1" datestr="$2"
   local -r oldts="$( date --date="$datestr" +%s )"
 
-  for-each filter-branch-ts "$oldts" < <( list-merged-of "$ref" ) \
+  list-merged-of "$ref" \
+    | for-each filter-branch-ts "$oldts" \
     | grep -v "^$ref\b" \
     | {
       if [ -n "${cmdopts[dryrun]}" ]; then
