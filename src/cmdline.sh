@@ -22,6 +22,52 @@
 test -z "$__INC_GITREMERGE_CMDLINE" || return 0
 __INC_GITREMERGE_CMDLINE=1
 
+declare -ri EX_USAGE=64
+
+declare -r _progver="$1"
+declare -r _optstr=pV
+
+
+##
+# Output standard usage information
+#
+usage()
+{
+  local progname="${1:-$( basename "$0" )}"
+
+  cat <<EOU
+Usage: $progname [-p] ref timespec
+Merge into the current branch all remote branches merged into REF within the
+past TIMESPEC. The value of TIMESPEC may be anything recognized by \`date\`.
+
+Options:
+  -p  pretend (dry run); show what would be merged, but do not merge
+  -V  display version and copyright information
+
+For more information on branching and merging, see \`git help branch\` and
+\`git help merge\` respectively.
+EOU
+}
+
+
+##
+# Output version information and copyright
+#
+# This is the standard version format used by GNU.
+#
+version()
+{
+  cat <<EOV
+git-merge $_progver
+Copyright (C) LoVullo Associates, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Mike Gerwitz <gerwitzm@lovullo.com>.
+EOV
+}
+
 
 ##
 # Process command-line options into the array of the provided name and then
@@ -33,10 +79,22 @@ cmdline()
   local opt
   shift 2
 
-  while getopts 'p' opt; do
+  test $# -ge 2 || {
+    usage
+    return $EX_USAGE
+  }
+
+  while getopts "$_optstr" opt; do
     case "$opt" in
       p) _set-opt "$optdest" dryrun 1;;
-      *) return 64;;  # EX_USAGE
+      V)
+        version
+        return
+        ;;
+      *)
+        usage
+        return $EX_USAGE
+        ;;
     esac
   done
 
