@@ -1,5 +1,5 @@
 #!/bin/bash
-# Re-merge branches
+# Utility functions
 #
 #  Copyright (C) 2014 LoVullo Associates, Inc.
 #
@@ -19,28 +19,24 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-# enter a known directory to simplify sourcing
-declare -r wd="$( pwd )"
-cd "$( dirname "$0" )/../src" || {
-  echo 'error: failed to enter src directory' >&2
-  exit 1
-}
-
-source util.sh
-source git.sh "$wd/.git"
+test -z "$__INC_GITREMERGE_UTIL" || return 0
+__INC_GITREMERGE_UTIL=1
 
 
 ##
-# Entry point
+# Invoke a callback for each line of input
 #
-main()
+# The arguments passed to the callback will first be the arguments provided to
+# for-each, followed by an argument for each word read from the line of input.
+#
+for-each()
 {
-  local -r ref="$1" datestr="$2"
-  local -r oldts="$( date --date="$datestr" +%s )"
+  local -r callback="$1"
+  local -a args=()
+  shift
 
-  for-each filter-branch-ts "$oldts" < <( list-merged-of "$ref" ) \
-    | grep -v "^$ref\b" \
-    | for-each merge-branch
+  while read -a args; do
+    "$callback" "$@" "${args[@]}" || return
+  done
 }
 
-main "$@"
