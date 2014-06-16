@@ -23,7 +23,19 @@ test -z "$__INC_GITREMERGE_GIT" || return 0
 __INC_GITREMERGE_GIT=1
 
 
-declare -rx GIT_DIR="${1:-GIT_DIR}"
+declare -rx _gitdir="$1"
+
+
+##
+# Run git command on the appropriate git repository
+#
+# A simple GIT_DIR export can cause problems when we're working within the
+# git-merge repository.
+#
+git()
+{
+  command git --git-dir="$_gitdir" "$@"
+}
 
 
 ##
