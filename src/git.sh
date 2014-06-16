@@ -65,10 +65,12 @@ merge-branch()
   shift
 
   local result=merged
-  git merge -q --no-ff "$branch" &>/dev/null || {
-    result=failed
-    git merge --abort &>/dev/null
-  }
+  cd "$_gitdir" \
+    && git merge -q --no-ff "$branch" &>/dev/null || {
+      result=failed
+      git merge --abort &>/dev/null
+    } \
+    && cd "$OLDPWD"
 
   echo "$branch $result" "$@"
 }
