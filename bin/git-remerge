@@ -26,6 +26,10 @@ cd "$( dirname "$0" )/../src" || {
   exit 1
 }
 
+# to hold command-line options
+declare -A cmdopts=()
+
+source cmdline.sh
 source util.sh
 source git.sh "$wd/.git"
 
@@ -40,7 +44,13 @@ main()
 
   for-each filter-branch-ts "$oldts" < <( list-merged-of "$ref" ) \
     | grep -v "^$ref\b" \
-    | for-each merge-branch
+    | {
+      if [ "${cmdopts[dryrun]}" -eq 1 ]; then
+        sed 's/$/ skipped/'
+      else
+        for-each merge-branch
+      fi
+    }
 }
 
-main "$@"
+cmdline cmdopts main "$@"
