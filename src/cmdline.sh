@@ -3,7 +3,7 @@
 #
 #  Copyright (C) 2014 LoVullo Associates, Inc.
 #
-#  This file is part of boilerepo.
+#  This file is part of git-remerge.
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
