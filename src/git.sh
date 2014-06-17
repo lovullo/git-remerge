@@ -43,25 +43,88 @@ git()
 #
 list-merged-of()
 {
-  local -r ref="$1"
+  local -r ref="$1" since="$2"
+  local ts commit
+  local -i curts
+  local -A branchts=() branchref=()
 
-  # some lines are of the form "local -> remote"; awk will therefore take the
-  # last field
-  git branch -r --merged "$ref" \
-    | awk '{print $NF}'
+  # the awkward use of process substitution is to prevent subshells, which would
+  # encapsulate assignments to branchts
+  while read ts commit; do
+    while read branch; do
+      # take only newer merge commits; we do this because commit order does not
+      # necessarily represent more recent merges: you can (a) rewrite history of
+      # merges or (b) merge older commits rather than the tip of the branch
+      curts="${branchts[$branch]}"
+      test "$curts" -eq 0 -o "${curts}" -ge "$ts" || continue
+
+      branchts[$branch]="$ts"
+      branchref[$branch]="$commit"
+    done < <( _get-commit-branch "$commit" )
+  done < <( _list-merges-since "$ref" "$since" )
+
+  # we now have a list of branches and the hash of the most recent commit in
+  # that branch that was merged into $ref
+  for branch in "${!branchref[@]}"; do
+    echo "${branchref[$branch]} $branch"
+  done
 }
 
 
 ##
-# Attempt to merge the given branch into the checked out tree
+# List the timestamp and merged commit hash of all merges within the given
+# timeframe into $ref
+#
+_list-merges-since()
+{
+  local -r ref="$1" since="$2"
+
+  # we can't use %ct here, because that's the time of the merge commit; we want
+  # the time of the commit that was merged
+  git log --merges --pretty=%P --since="$since" .."$ref" \
+    | while read _ commit; do
+        echo "$( git log -1 --pretty=%ct "$commit" ) $commit"
+      done
+}
+
+
+##
+# Determine the branch from which $commit originated
+#
+# Note that this will only work if the remote ref still exists. Fortunately,
+# this is okay, because we wouldn't want to re-merge abandoned branches.
+_get-commit-branch()
+{
+  local -r commit="$1"
+  local -i found
+
+  git branch -r --contains "$commit" --no-merged \
+    | awk '{print $NF}' \
+    | while read branch; do
+        found="$(
+          git log --no-merges -1 --oneline "$commit"^.."$branch" \
+            | wc -l
+        )"
+
+        [ "$found" -eq 1 ] || continue
+
+        # the commit is *not* introduced by a merge; we found the branch
+        echo "$branch"
+        break
+      done
+}
+
+
+##
+# Attempt to merge the given commit into the checked out tree
 #
 # If a merge fails, it will be immediately aborted. The result is the branch
 # name, followed by either `merged' or `failed', followed by all other arguments
 # passed to this function.
 #
-merge-branch()
+merge-commit()
 {
-  local -r branch="$1"
+  local -r commit="$1"
   shift
 
   local result=merged
@@ -72,30 +135,6 @@ merge-branch()
     } \
     && cd "$OLDPWD"
 
-  echo "$branch $result" "$@"
-}
-
-
-##
-# Filter a branch based on the commit timestamp of the tip
-#
-# If the tip of the branch is older than the provided timestamp, then there
-# will be no output; otherwise, the branch name will be echoed along with all
-# other arguments passed to this function.
-#
-filter-branch-ts()
-{
-  local -r oldts="$1" branch="$2"
-  local -r ts="$( git log -1 --pretty="%ct" "$branch" )" || return
-  shift 2
-
-  test -n "$ts" || {
-    echo "warning: failed to retrieve timestamp of \`$branch'" >&2
-    return 1
-  }
-
-  # keep only branches that are >= the given date
-  test "$ts" -ge "$oldts" || return 0
-  echo "$branch" "$@"
+  echo "$commit $result" "$@"
 }
 

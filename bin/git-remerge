@@ -39,17 +39,15 @@ source git.sh "$gitdir"
 #
 main()
 {
-  local -r ref="$1" datestr="$2"
-  local -r oldts="$( date --date="$datestr" +%s )"
+  local -r ref="$1" since="$2"
 
-  list-merged-of "$ref" \
-    | for-each filter-branch-ts "$oldts" \
+  list-merged-of "$ref" "$since" \
     | grep -v "^$ref\b" \
     | {
       if [ -n "${cmdopts[dryrun]}" ]; then
         sed 's/$/ skipped/'
       else
-        for-each merge-branch
+        for-each merge-commit
       fi
     }
 }
