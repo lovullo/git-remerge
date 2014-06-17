@@ -102,7 +102,7 @@ _get-commit-branch()
     | awk '{print $NF}' \
     | while read branch; do
         found="$(
-          git log --no-merges -1 --oneline "$commit"^.."$branch" \
+          git log --no-merges -1 -r --oneline "$commit"^.."$branch" \
             | wc -l
         )"
 
