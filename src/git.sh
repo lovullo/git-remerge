@@ -91,6 +91,11 @@ _list-merges-since()
 ##
 # Determine the branch from which $commit originated
 #
+# FIXME:
+# This assumes that the branch is the only branch that contains the commit as a
+# --first-parent; if this is not the case (e.g. branching off of a topic
+# branch), this may not give the intended results.
+#
 # Note that this will only work if the remote ref still exists. Fortunately,
 # this is okay, because we wouldn't want to re-merge abandoned branches.
 _get-commit-branch()
@@ -101,12 +106,9 @@ _get-commit-branch()
   git branch -r --contains "$commit" --no-merged \
     | awk '{print $NF}' \
     | while read branch; do
-        found="$(
-          git log --no-merges -1 -r --oneline "$commit"^.."$branch" \
-            | wc -l
-        )"
-
-        [ "$found" -eq 1 ] || continue
+        git log --first-parent --pretty=%H "$commit"^.."$branch" \
+          | grep -q "$commit" \
+          || continue
 
         # the commit is *not* introduced by a merge; we found the branch
         echo "$branch"
