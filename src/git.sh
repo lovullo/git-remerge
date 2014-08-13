@@ -126,17 +126,19 @@ _get-commit-branch()
 #
 merge-commit()
 {
-  local -r commit="$1"
-  shift
+  local -r commit="$1" branch="$2"
+  shift 2
+
+  local -r msg="Re-merged '$branch' at ${commit:0:7}"
 
   local result=merged
   cd "$_gitdir" \
-    && git merge -q --no-ff "$branch" &>/dev/null || {
+    && git merge -q --no-ff "$commit" -m"$msg" &>/dev/null || {
       result=failed
       git merge --abort &>/dev/null
     } \
     && cd "$OLDPWD"
 
-  echo "$commit $result" "$@"
+  echo "$commit $result $branch" "$@"
 }
 
