@@ -132,12 +132,10 @@ merge-commit()
   local -r msg="Re-merged '$branch' at ${commit:0:7}"
 
   local result=merged
-  cd "$_gitdir" \
-    && git merge -q --no-ff "$commit" -m"$msg" &>/dev/null || {
-      result=failed
-      git merge --abort &>/dev/null
-    } \
-    && cd "$OLDPWD"
+  git merge -q --no-ff "$commit" -m"$msg" &>/dev/null || {
+    result=failed
+    git merge --abort &>/dev/null
+  }
 
   echo "$commit $result $branch" "$@"
 }

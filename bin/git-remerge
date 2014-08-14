@@ -20,7 +20,8 @@
 ##
 
 # enter a known directory to simplify sourcing
-declare -r gitdir="$(pwd)/$( git rev-parse --git-dir )"
+declare -r cwd="$(pwd)"
+declare -r gitdir="$cwd/$( git rev-parse --git-dir )"
 cd "$( dirname "$0" )/../src" || {
   echo 'error: failed to enter src directory' >&2
   exit 1
@@ -32,6 +33,9 @@ declare -A cmdopts=()
 source cmdline.sh 0.1.0
 source util.sh
 source git.sh "$gitdir"
+
+# initialized; return to original working directory so as not to confuse git
+cd "$cwd"
 
 
 ##
