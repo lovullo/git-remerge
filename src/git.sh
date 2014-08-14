@@ -56,7 +56,7 @@ list-merged-of()
       # necessarily represent more recent merges: you can (a) rewrite history of
       # merges or (b) merge older commits rather than the tip of the branch
       curts="${branchts[$branch]}"
-      test "$curts" -eq 0 -o "${curts}" -ge "$ts" || continue
+      test "$curts" -eq 0 -o "$ts" -gt "$curts" || continue
 
       branchts[$branch]="$ts"
       branchref[$branch]="$commit"
