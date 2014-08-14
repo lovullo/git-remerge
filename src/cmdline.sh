@@ -37,6 +37,7 @@ usage()
 
   cat <<EOU
 Usage: $progname [-p] ref timespec
+       $progname -V
 Merge into the current branch all remote branches merged into REF within the
 past TIMESPEC. The value of TIMESPEC may be anything recognized by \`date\`.
 
