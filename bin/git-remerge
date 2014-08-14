@@ -49,7 +49,7 @@ main()
     | grep -v "^$ref\b" \
     | {
       if [ -n "${cmdopts[dryrun]}" ]; then
-        sed 's/$/ skipped/'
+        sed 's/ / skipped /'
       else
         for-each merge-commit
       fi
