@@ -79,11 +79,6 @@ cmdline()
   local opt
   shift 2
 
-  test $# -ge 2 || {
-    usage
-    return $EX_USAGE
-  }
-
   while getopts "$_optstr" opt; do
     case "$opt" in
       p) _set-opt "$optdest" dryrun 1;;
@@ -97,6 +92,11 @@ cmdline()
         ;;
     esac
   done
+
+  test $# -ge 2 || {
+    usage
+    return $EX_USAGE
+  }
 
   shift $((OPTIND-1))
 
