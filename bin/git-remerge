@@ -21,7 +21,9 @@
 
 # enter a known directory to simplify sourcing
 declare -r cwd="$(pwd)"
-declare -r gitdir="$cwd/$( git rev-parse --git-dir )"
+
+# older versions of git do not return absolute paths, but newer do
+declare -r gitdir="$( cd "$( git rev-parse --git-dir )" && pwd )"
 cd "$( dirname "$0" )/../src" || {
   echo 'error: failed to enter src directory' >&2
   exit 1
